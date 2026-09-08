@@ -1,45 +1,37 @@
-from fastapi import FastAPI, HTTPException
-from fastapi.exceptions import RequestValidationError
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from app.routes.chat import router as chat_router  # Direct import
+import logging
 
-from app.core.errors import (
-    ProcessingError,
-    http_error_handler,
-    processing_error_handler,
-    unhandled_error_handler,
-    validation_error_handler,
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
-from app.routers.health import router as health_router
-from app.routers.numpy_routes import router as numpy_router
 
+# Create FastAPI app
 app = FastAPI(
-    title="ChatBot Python API",
-    version="1.0.0",
-    description="NumPy processing API for the existing CodeIgniter application.",
+    title="AI Agent API",
+    description="Backend API for AI Agent with Gemini integration",
+    version="1.0.0"
 )
 
+# Add CORS middleware (allows frontend to call API)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["GET", "POST"],
+    allow_origins=["*"],  # For development only
+    allow_credentials=True,
+    allow_methods=["*"],
     allow_headers=["*"],
 )
 
-app.add_exception_handler(ProcessingError, processing_error_handler)
-app.add_exception_handler(RequestValidationError, validation_error_handler)
-app.add_exception_handler(HTTPException, http_error_handler)
-app.add_exception_handler(Exception, unhandled_error_handler)
-
-app.include_router(health_router)
-app.include_router(numpy_router)
-
+# Include routers
+app.include_router(chat_router)
 
 @app.get("/")
-def root() -> dict:
-    return {
-        "success": True,
-        "service": "python-api",
-        "message": "Python NumPy API is running.",
-        "health": "/health",
-        "numpy": "/numpy/process",
-    }
+async def root():
+    return {"message": "AI Agent API is running", "docs": "/docs"}
+
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy"}
