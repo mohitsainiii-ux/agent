@@ -1,0 +1,1 @@
+# Python API package root. Future modules (pandas, documents, LLM) can live alongside numpy.

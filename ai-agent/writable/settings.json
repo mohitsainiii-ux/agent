@@ -1,0 +1,17 @@
+{
+    "python": {
+        "api_url": "http://127.0.0.1:9000",
+        "timeout": 30,
+        "enabled": true
+    },
+    "numpy": {
+        "default_operation": "sum",
+        "decimal_precision": 2,
+        "allow_negative": true,
+        "allow_decimal": true,
+        "max_input_values": 10000,
+        "auto_array_conversion": true,
+        "reshape_rows": 1,
+        "reshape_cols": 5
+    }
+}

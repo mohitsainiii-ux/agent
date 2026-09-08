@@ -1,0 +1,29 @@
+<?php
+
+namespace Config;
+
+// Create a new instance of our RouteCollection class.
+$routes = Services::routes();
+
+// Load the system's routing file first, so that the app and ENVIRONMENT
+// can override as needed.
+if (is_file(SYSTEMPATH . 'Config/Routes.php')) {
+    require SYSTEMPATH . 'Config/Routes.php';
+}
+
+$routes->setDefaultNamespace('App\Controllers');
+$routes->setDefaultController('Chat');      // Set Chat as default controller
+$routes->setDefaultMethod('index');
+$routes->setTranslateURIDashes(false);
+$routes->set404Override();
+
+// We get a performance increase by specifying the default
+// route since we don't have to scan directories.
+$routes->get('/', 'Chat::index');
+
+$routes->get('numpy/health', 'Numpy::health');
+$routes->post('numpy/process', 'Numpy::process');
+
+$routes->get('settings', 'Settings::index');
+$routes->post('settings', 'Settings::save');
+$routes->post('settings/test', 'Settings::test');
