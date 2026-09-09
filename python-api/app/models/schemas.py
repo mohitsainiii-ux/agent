@@ -5,6 +5,7 @@ class ChatRequest(BaseModel):
     message: str = Field(..., min_length=1, description="User's message to the AI")
     
 class ChatResponse(BaseModel):
+    success: bool = True
     response: str = Field(..., description="AI's response")
     type: Literal["text", "code"] = Field(..., description="Type of response")
     

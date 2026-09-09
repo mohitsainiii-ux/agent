@@ -1,16 +1,14 @@
-import google.generativeai as genai
 from app.config.settings import settings
 
 class GeminiService:
-    def __init__(self):
+    def __init__(self) -> None:
         if not settings.is_api_key_set:
             raise ValueError("GEMINI_API_KEY is not set in .env file")
-        
-        # Configure Gemini
+
+        import google.generativeai as genai
+
         genai.configure(api_key=settings.GEMINI_API_KEY)
-        
-        # Use the latest model
-        self.model = genai.GenerativeModel('gemini-pro')
+        self.model = genai.GenerativeModel(settings.GEMINI_MODEL)
         
     def generate_response(self, user_message: str) -> str:
         """
@@ -30,5 +28,5 @@ class GeminiService:
             # Re-raise with a clear message
             raise Exception(f"Gemini API error: {str(e)}")
 
-# Create a single instance
-gemini_service = GeminiService()
+def generate_response(user_message: str) -> str:
+    return GeminiService().generate_response(user_message)

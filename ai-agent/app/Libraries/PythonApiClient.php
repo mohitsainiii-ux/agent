@@ -46,6 +46,11 @@ class PythonApiClient
         return $this->postJson($baseUrl, $timeout, '/numpy/process', $payload);
     }
 
+    public function chat(string $baseUrl, int $timeout, array $payload): array
+    {
+        return $this->postJson($baseUrl, $timeout, '/chat/', $payload);
+    }
+
     public function createArray(string $baseUrl, int $timeout, array $payload): array
     {
         return $this->postJson($baseUrl, $timeout, '/numpy/array', $payload);
