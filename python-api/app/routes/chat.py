@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from app.models.schemas import ChatRequest, ChatResponse, ErrorResponse
-from app.services.gemini_service import gemini_service
+from app.services.gemini_service import generate_response
 import logging
 
 # Set up logging
@@ -27,7 +27,7 @@ async def chat_endpoint(request: ChatRequest):
         logger.info(f"Received chat request: {request.message[:50]}...")
         
         # Get response from Gemini
-        response_text = gemini_service.generate_response(request.message)
+        response_text = generate_response(request.message)
         
         # Determine if response is code (simple heuristic)
         response_type = "code" if any(marker in response_text.lower() for marker in 
@@ -38,10 +38,10 @@ async def chat_endpoint(request: ChatRequest):
             type=response_type
         )
         
-    except ValueError as e:
-        logger.error(f"Configuration error: {str(e)}")
+    except ValueError as error:
+        logger.error("Configuration error: %s", error)
         raise HTTPException(
-            status_code=500,
+            status_code=503,
             detail="API key not configured. Please set GEMINI_API_KEY in .env file."
         )
     except Exception as e:

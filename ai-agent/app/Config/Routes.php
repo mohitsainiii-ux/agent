@@ -21,6 +21,7 @@ $routes->set404Override();
 // route since we don't have to scan directories.
 $routes->get('/', 'Chat::index');
 
+$routes->post('chat', 'Chat::send');
 $routes->get('numpy/health', 'Numpy::health');
 $routes->post('numpy/process', 'Numpy::process');
 

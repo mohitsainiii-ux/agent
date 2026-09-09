@@ -254,26 +254,45 @@
     appendBubble("user", text);
     scrollToBottom();
     renderHistory();
-    simulateReply(text);
+    requestReply(text, chat.id);
   }
 
-  function simulateReply(prompt) {
+  async function requestReply(prompt, chatId) {
     typingIndicator.classList.remove("d-none");
     scrollToBottom();
 
-    window.setTimeout(() => {
-      const reply =
-        "I received your message: \"" +
-        prompt +
-        "\". Connect a model API to replace this demo reply.";
-      const chat = getActiveChat();
+    try {
+      const response = await fetch(window.chatEndpoints.send, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({ message: prompt }),
+      });
+      const result = await response.json();
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || "The AI response could not be generated.");
+      }
+
+      const chat = chats.find((entry) => entry.id === chatId);
+      if (!chat) return;
+      const reply = result.response;
       chat.messages.push({ role: "ai", content: reply });
       chat.updatedAt = Date.now();
       saveChats();
-      typingIndicator.classList.add("d-none");
       appendBubble("ai", reply);
       scrollToBottom();
-    }, 700);
+    } catch (error) {
+      const chat = chats.find((entry) => entry.id === chatId);
+      if (chat) {
+        const reply = `Unable to contact the AI service: ${error.message || "Please try again."}`;
+        chat.messages.push({ role: "ai", content: reply });
+        chat.updatedAt = Date.now();
+        saveChats();
+        appendBubble("ai", reply);
+        scrollToBottom();
+      }
+    } finally {
+      typingIndicator.classList.add("d-none");
+    }
   }
 
   function appendBubble(role, content) {
