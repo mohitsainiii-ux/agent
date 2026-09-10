@@ -1,4 +1,6 @@
 from fastapi import APIRouter, HTTPException
+from app.core.errors import ProcessingError
+from app.config.settings import settings
 from app.models.schemas import ChatRequest, ChatResponse, ErrorResponse
 from app.services.gemini_service import generate_response
 import logging
@@ -27,7 +29,7 @@ async def chat_endpoint(request: ChatRequest):
         logger.info(f"Received chat request: {request.message[:50]}...")
         
         # Get response from Gemini
-        response_text = generate_response(request.message)
+        response_text = generate_response(request.message, request.history)
         
         # Determine if response is code (simple heuristic)
         response_type = "code" if any(marker in response_text.lower() for marker in 
@@ -35,7 +37,8 @@ async def chat_endpoint(request: ChatRequest):
         
         return ChatResponse(
             response=response_text,
-            type=response_type
+            type=response_type,
+            model=settings.GEMINI_MODEL,
         )
         
     except ValueError as error:
@@ -44,9 +47,9 @@ async def chat_endpoint(request: ChatRequest):
             status_code=503,
             detail="API key not configured. Please set GEMINI_API_KEY in .env file."
         )
-    except Exception as e:
-        logger.error(f"Error processing chat: {str(e)}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Error processing your request: {str(e)}"
+    except Exception:
+        logger.exception("Error processing chat")
+        raise ProcessingError(
+            "The AI service could not complete the request. Please try again.",
+            status_code=502,
         )

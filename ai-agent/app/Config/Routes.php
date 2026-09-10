@@ -22,6 +22,11 @@ $routes->set404Override();
 $routes->get('/', 'Chat::index');
 
 $routes->post('chat', 'Chat::send');
+$routes->get('chat/conversations', 'Chat::conversations');
+$routes->post('chat/conversations', 'Chat::createConversation');
+$routes->get('chat/conversations/(:num)', 'Chat::loadConversation/$1');
+$routes->delete('chat/conversations/(:num)', 'Chat::deleteConversation/$1');
+$routes->post('chat/conversations/(:num)/messages', 'Chat::sendMessage/$1');
 $routes->get('numpy/health', 'Numpy::health');
 $routes->post('numpy/process', 'Numpy::process');
 

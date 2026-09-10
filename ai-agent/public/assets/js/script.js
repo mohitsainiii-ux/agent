@@ -26,16 +26,14 @@
   const onlineStatus = document.getElementById("onlineStatus");
   const settingsForm = document.getElementById("settingsForm");
 
-  const STORAGE_KEY = "ai-assistant-chats";
   const THEME_KEY = "ai-assistant-theme";
 
-  let chats = loadChats();
-  let activeChatId = chats[0]?.id || createChat().id;
+  let chats = [];
+  let activeChatId = null;
 
   applyTheme(localStorage.getItem(THEME_KEY) || "light");
-  renderHistory();
-  renderActiveChat();
   initialiseNumpy();
+  initialiseChat();
 
   document.getElementById("newChatBtn")?.addEventListener("click", startNewChat);
   document.getElementById("newChatBtnMobile")?.addEventListener("click", startNewChat);
@@ -68,12 +66,23 @@
     }
   });
 
-  function loadChats() {
+  async function initialiseChat() {
     try {
-      const data = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
-      return Array.isArray(data) ? data : [];
-    } catch {
-      return [];
+      const response = await fetch(window.chatEndpoints.conversations, { headers: { Accept: "application/json" } });
+      const result = await response.json();
+      if (!response.ok || !result.success) throw new Error(result.error || "Conversations could not be loaded.");
+      chats = result.conversations || [];
+      if (!chats.length) {
+        const created = await createChat();
+        chats = [created];
+      }
+      activeChatId = chats[0].id;
+      await loadChat(activeChatId);
+      renderHistory();
+      renderActiveChat();
+    } catch (error) {
+      chatTitle.textContent = "Unable to load conversations";
+      appendBubble("ai", error.message || "Conversations are temporarily unavailable.");
     }
   }
 
@@ -205,32 +214,43 @@
     status.className = `small ms-2 ${success ? "text-success" : "text-danger"}`;
   }
 
-  function saveChats() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(chats));
+  async function createChat() {
+    const response = await fetch(window.chatEndpoints.conversations, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify({ title: "New conversation" }),
+    });
+    const result = await response.json();
+    if (!response.ok || !result.success) throw new Error(result.error || "A new conversation could not be created.");
+    return result.conversation;
   }
 
-  function createChat() {
-    const chat = {
-      id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
-      title: "New conversation",
-      messages: [],
-      updatedAt: Date.now(),
-    };
-    chats.unshift(chat);
-    saveChats();
-    return chat;
+  async function loadChat(chatId) {
+    const response = await fetch(`${window.chatEndpoints.conversations}/${encodeURIComponent(chatId)}`, {
+      headers: { Accept: "application/json" },
+    });
+    const result = await response.json();
+    if (!response.ok || !result.success) throw new Error(result.error || "The conversation could not be loaded.");
+    const index = chats.findIndex((chat) => String(chat.id) === String(chatId));
+    if (index >= 0) chats[index] = result.conversation;
+    return result.conversation;
   }
 
   function getActiveChat() {
     return chats.find((chat) => chat.id === activeChatId);
   }
 
-  function startNewChat() {
-    const chat = createChat();
-    activeChatId = chat.id;
-    renderHistory();
-    renderActiveChat();
-    messageInput?.focus();
+  async function startNewChat() {
+    try {
+      const chat = await createChat();
+      chats.unshift(chat);
+      activeChatId = chat.id;
+      renderHistory();
+      renderActiveChat();
+      messageInput?.focus();
+    } catch (error) {
+      appendBubble("ai", error.message || "A new conversation could not be created.");
+    }
   }
 
   function sendMessage() {
@@ -240,14 +260,12 @@
     const chat = getActiveChat();
     if (!chat) return;
 
+    chat.messages = chat.messages || [];
     chat.messages.push({ role: "user", content: text });
     if (chat.title === "New conversation") {
       chat.title = text.slice(0, 42);
       chatTitle.textContent = chat.title;
     }
-    chat.updatedAt = Date.now();
-    saveChats();
-
     messageInput.value = "";
     autoResize();
     emptyState.classList.add("d-none");
@@ -262,7 +280,7 @@
     scrollToBottom();
 
     try {
-      const response = await fetch(window.chatEndpoints.send, {
+      const response = await fetch(`${window.chatEndpoints.conversations}/${encodeURIComponent(chatId)}/messages`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Accept: "application/json" },
         body: JSON.stringify({ message: prompt }),
@@ -275,18 +293,14 @@
       const chat = chats.find((entry) => entry.id === chatId);
       if (!chat) return;
       const reply = result.response;
-      chat.messages.push({ role: "ai", content: reply });
-      chat.updatedAt = Date.now();
-      saveChats();
+      chat.messages.push({ role: "assistant", content: reply });
       appendBubble("ai", reply);
+      renderHistory();
       scrollToBottom();
     } catch (error) {
       const chat = chats.find((entry) => entry.id === chatId);
       if (chat) {
         const reply = `Unable to contact the AI service: ${error.message || "Please try again."}`;
-        chat.messages.push({ role: "ai", content: reply });
-        chat.updatedAt = Date.now();
-        saveChats();
         appendBubble("ai", reply);
         scrollToBottom();
       }
@@ -317,20 +331,21 @@
     const chat = getActiveChat();
     messageArea.innerHTML = "";
     chatTitle.textContent = chat?.title || "New conversation";
+    const messages = chat?.messages || [];
 
-    if (!chat || chat.messages.length === 0) {
+    if (!chat || messages.length === 0) {
       emptyState.classList.remove("d-none");
       return;
     }
 
     emptyState.classList.add("d-none");
-    chat.messages.forEach((message) => appendBubble(message.role, message.content));
+    messages.forEach((message) => appendBubble(message.role === "assistant" ? "ai" : message.role, message.content));
     scrollToBottom();
   }
 
   function renderHistory(query = "") {
     const term = query.trim().toLowerCase();
-    const filtered = chats.filter((chat) => chat.title.toLowerCase().includes(term));
+    const filtered = chats.filter((chat) => (chat.title || "New conversation").toLowerCase().includes(term));
     [historyList, historyListMobile].forEach((list) => {
       if (!list) return;
       list.innerHTML = "";
@@ -352,22 +367,40 @@
     item.addEventListener("click", (event) => {
       if (event.target.closest(".delete-chat")) return;
       activeChatId = chat.id;
-      renderHistory(searchHistory?.value || "");
-      renderActiveChat();
+      loadChat(chat.id)
+        .then(() => {
+          renderHistory(searchHistory?.value || "");
+          renderActiveChat();
+        })
+        .catch((error) => appendBubble("ai", error.message || "The conversation could not be loaded."));
     });
     item.querySelector(".delete-chat").addEventListener("click", (event) => {
       event.stopPropagation();
-      chats = chats.filter((entry) => entry.id !== chat.id);
-      if (!chats.length) {
-        activeChatId = createChat().id;
-      } else if (activeChatId === chat.id) {
-        activeChatId = chats[0].id;
-      }
-      saveChats();
-      renderHistory();
-      renderActiveChat();
+      deleteChat(chat);
     });
     return item;
+  }
+
+  async function deleteChat(chat) {
+    try {
+      const response = await fetch(`${window.chatEndpoints.conversations}/${encodeURIComponent(chat.id)}`, {
+        method: "DELETE",
+        headers: { Accept: "application/json" },
+      });
+      const result = await response.json();
+      if (!response.ok || !result.success) throw new Error(result.error || "The conversation could not be deleted.");
+      chats = chats.filter((entry) => String(entry.id) !== String(chat.id));
+      if (!chats.length) {
+        const created = await createChat();
+        chats = [created];
+      }
+      if (String(activeChatId) === String(chat.id)) activeChatId = chats[0].id;
+      await loadChat(activeChatId);
+      renderHistory();
+      renderActiveChat();
+    } catch (error) {
+      appendBubble("ai", error.message || "The conversation could not be deleted.");
+    }
   }
 
   function handleFile() {

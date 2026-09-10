@@ -26,7 +26,15 @@ to your `app` folder. The affected files can be copied or merged from
 ## Setup
 
 Copy `env` to `.env` and tailor for your app, specifically the baseURL
-and any database settings.
+and any database settings. For this project, copy `.env.example` to `.env`,
+set the MySQL `database.default.*` values, and run `database/chat_schema.sql`
+against that database before opening the chat. The chat endpoints persist
+guest conversations and messages through the CodeIgniter gateway; no login is
+required.
+
+The guest chat gateway exposes `GET/POST /chat/conversations`,
+`GET/DELETE /chat/conversations/{id}`, and
+`POST /chat/conversations/{id}/messages`.
 
 ## Important Change with index.php
 
