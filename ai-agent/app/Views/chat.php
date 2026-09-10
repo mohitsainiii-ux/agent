@@ -203,7 +203,7 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
   <script>window.numpySettings = <?= json_encode($settings ?? [], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;</script>
   <script>window.numpyEndpoints = { process: "<?= site_url('numpy/process') ?>", health: "<?= site_url('numpy/health') ?>", settings: "<?= site_url('settings') ?>", settingsTest: "<?= site_url('settings/test') ?>" };</script>
-  <script>window.chatEndpoints = { send: "<?= site_url('chat') ?>" };</script>
+  <script>window.chatEndpoints = { conversations: "<?= site_url('chat/conversations') ?>" };</script>
   <script src="assets/js/script.js"></script>
 </body>
 </html>

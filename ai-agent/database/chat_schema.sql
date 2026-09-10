@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS users (
 
 CREATE TABLE IF NOT EXISTS conversations (
     id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+    -- NULL user_id is the guest scope used by the current gateway.
     user_id BIGINT UNSIGNED NULL,
     title VARCHAR(255) NOT NULL DEFAULT 'New conversation',
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
