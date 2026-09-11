@@ -30,11 +30,17 @@ and any database settings. For this project, copy `.env.example` to `.env`,
 set the MySQL `database.default.*` values, and run `database/chat_schema.sql`
 against that database before opening the chat. The chat endpoints persist
 guest conversations and messages through the CodeIgniter gateway; no login is
-required.
+required. Users can optionally create an email/password account to keep a
+separate, server-side conversation history.
 
 The guest chat gateway exposes `GET/POST /chat/conversations`,
 `GET/DELETE /chat/conversations/{id}`, and
 `POST /chat/conversations/{id}/messages`.
+
+Authentication endpoints expose `GET /auth/current`, `POST /auth/register`,
+`POST /auth/login`, and `POST /auth/logout`. Authentication uses the
+CodeIgniter session cookie. Passwords are stored as one-way password hashes;
+email verification, password reset, and social login are not included.
 
 ## Important Change with index.php
 

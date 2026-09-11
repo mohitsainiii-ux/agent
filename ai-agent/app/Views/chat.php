@@ -41,7 +41,8 @@
         </div>
         <div class="d-flex align-items-center mt-3">
           <i class="bi bi-person-circle fs-5 me-2"></i>
-          <span class="small">Guest user</span>
+          <span class="small" id="userIdentity">Guest user</span>
+          <button class="btn btn-link btn-sm ms-auto p-0" id="authActionBtn" type="button">Sign in</button>
         </div>
       </div>
     </aside>
@@ -160,7 +161,40 @@
         </div>
         <div class="d-flex align-items-center mt-3">
           <i class="bi bi-person-circle fs-5 me-2"></i>
-          <span class="small">Guest user</span>
+          <span class="small" id="userIdentityMobile">Guest user</span>
+          <button class="btn btn-link btn-sm ms-auto p-0" id="authActionBtnMobile" type="button">Sign in</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="authModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="authModalTitle">Sign in</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="authForm">
+            <div class="mb-3 d-none" id="authNameGroup">
+              <label class="form-label" for="authName">Name</label>
+              <input class="form-control" id="authName" type="text" maxlength="120" autocomplete="name" />
+            </div>
+            <div class="mb-3">
+              <label class="form-label" for="authEmail">Email</label>
+              <input class="form-control" id="authEmail" type="email" required autocomplete="email" />
+            </div>
+            <div class="mb-3">
+              <label class="form-label" for="authPassword">Password</label>
+              <input class="form-control" id="authPassword" type="password" minlength="8" required autocomplete="current-password" />
+            </div>
+            <div class="alert alert-danger d-none mb-3" id="authError" role="alert"></div>
+            <div class="d-flex justify-content-between align-items-center">
+              <button class="btn btn-link btn-sm px-0" id="authModeToggle" type="button">Create an account</button>
+              <button class="btn btn-primary" id="authSubmit" type="submit">Sign in</button>
+            </div>
+          </form>
         </div>
       </div>
     </div>
@@ -204,6 +238,7 @@
   <script>window.numpySettings = <?= json_encode($settings ?? [], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;</script>
   <script>window.numpyEndpoints = { process: "<?= site_url('numpy/process') ?>", health: "<?= site_url('numpy/health') ?>", settings: "<?= site_url('settings') ?>", settingsTest: "<?= site_url('settings/test') ?>" };</script>
   <script>window.chatEndpoints = { conversations: "<?= site_url('chat/conversations') ?>" };</script>
+  <script>window.authEndpoints = { current: "<?= site_url('auth/current') ?>", register: "<?= site_url('auth/register') ?>", login: "<?= site_url('auth/login') ?>", logout: "<?= site_url('auth/logout') ?>" };</script>
   <script src="assets/js/script.js"></script>
 </body>
 </html>

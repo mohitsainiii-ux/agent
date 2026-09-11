@@ -25,11 +25,24 @@
   const numpyStatusDot = document.getElementById("numpyStatusDot");
   const onlineStatus = document.getElementById("onlineStatus");
   const settingsForm = document.getElementById("settingsForm");
+  const authModal = document.getElementById("authModal");
+  const authForm = document.getElementById("authForm");
+  const authNameGroup = document.getElementById("authNameGroup");
+  const authModalTitle = document.getElementById("authModalTitle");
+  const authModeToggle = document.getElementById("authModeToggle");
+  const authSubmit = document.getElementById("authSubmit");
+  const authError = document.getElementById("authError");
+  const userIdentity = document.getElementById("userIdentity");
+  const userIdentityMobile = document.getElementById("userIdentityMobile");
+  const authActionBtn = document.getElementById("authActionBtn");
+  const authActionBtnMobile = document.getElementById("authActionBtnMobile");
 
   const THEME_KEY = "ai-assistant-theme";
 
   let chats = [];
   let activeChatId = null;
+  let currentUser = null;
+  let authMode = "login";
 
   applyTheme(localStorage.getItem(THEME_KEY) || "light");
   initialiseNumpy();
@@ -48,6 +61,10 @@
   numpyOperation?.addEventListener("change", updateNumpyFields);
   numpyForm?.addEventListener("submit", processNumpy);
   settingsForm?.addEventListener("submit", saveSettings);
+  authForm?.addEventListener("submit", submitAuth);
+  authModeToggle?.addEventListener("click", toggleAuthMode);
+  authActionBtn?.addEventListener("click", handleAuthAction);
+  authActionBtnMobile?.addEventListener("click", handleAuthAction);
   document.getElementById("healthCheckBtn")?.addEventListener("click", () => checkHealth(true));
 
   document.querySelectorAll(".suggestion-chip").forEach((chip) => {
@@ -68,6 +85,7 @@
 
   async function initialiseChat() {
     try {
+      await loadCurrentUser();
       const response = await fetch(window.chatEndpoints.conversations, { headers: { Accept: "application/json" } });
       const result = await response.json();
       if (!response.ok || !result.success) throw new Error(result.error || "Conversations could not be loaded.");
@@ -76,6 +94,7 @@
         const created = await createChat();
         chats = [created];
       }
+
       activeChatId = chats[0].id;
       await loadChat(activeChatId);
       renderHistory();
@@ -84,6 +103,105 @@
       chatTitle.textContent = "Unable to load conversations";
       appendBubble("ai", error.message || "Conversations are temporarily unavailable.");
     }
+  }
+
+  async function loadCurrentUser() {
+    const response = await fetch(window.authEndpoints.current, { headers: { Accept: "application/json" } });
+    const result = await response.json();
+    if (!response.ok || !result.success) throw new Error(result.error || "Authentication state could not be loaded.");
+    setCurrentUser(result.user);
+  }
+
+  function setCurrentUser(user) {
+    currentUser = user;
+    const label = user ? user.name : "Guest user";
+    [userIdentity, userIdentityMobile].forEach((element) => {
+      if (element) element.textContent = label;
+    });
+    [authActionBtn, authActionBtnMobile].forEach((button) => {
+      if (button) button.textContent = user ? "Sign out" : "Sign in";
+    });
+  }
+
+  function handleAuthAction() {
+    if (currentUser) {
+      logout();
+      return;
+    }
+    authMode = "login";
+    updateAuthModal();
+    bootstrap.Modal.getOrCreateInstance(authModal).show();
+  }
+
+  function toggleAuthMode() {
+    authMode = authMode === "login" ? "register" : "login";
+    updateAuthModal();
+  }
+
+  function updateAuthModal() {
+    const registering = authMode === "register";
+    authModalTitle.textContent = registering ? "Create account" : "Sign in";
+    authSubmit.textContent = registering ? "Create account" : "Sign in";
+    authModeToggle.textContent = registering ? "Already have an account?" : "Create an account";
+    authNameGroup.classList.toggle("d-none", !registering);
+    document.getElementById("authPassword").setAttribute("autocomplete", registering ? "new-password" : "current-password");
+    authError.classList.add("d-none");
+  }
+
+  async function submitAuth(event) {
+    event.preventDefault();
+    authError.classList.add("d-none");
+    authSubmit.disabled = true;
+    try {
+      const registering = authMode === "register";
+      const payload = {
+        email: document.getElementById("authEmail").value,
+        password: document.getElementById("authPassword").value,
+      };
+      if (registering) payload.name = document.getElementById("authName").value;
+      const response = await fetch(registering ? window.authEndpoints.register : window.authEndpoints.login, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const result = await response.json();
+      if (!response.ok || !result.success) throw new Error(result.error || "Authentication failed.");
+      setCurrentUser(result.user);
+      bootstrap.Modal.getOrCreateInstance(authModal).hide();
+      await reloadChats();
+    } catch (error) {
+      authError.textContent = error.message || "Authentication failed.";
+      authError.classList.remove("d-none");
+    } finally {
+      authSubmit.disabled = false;
+    }
+  }
+
+  async function logout() {
+    try {
+      const response = await fetch(window.authEndpoints.logout, {
+        method: "POST",
+        headers: { Accept: "application/json" },
+      });
+      const result = await response.json();
+      if (!response.ok || !result.success) throw new Error(result.error || "Sign out failed.");
+      setCurrentUser(null);
+      await reloadChats();
+    } catch (error) {
+      appendBubble("ai", error.message || "Sign out failed.");
+    }
+  }
+
+  async function reloadChats() {
+    const response = await fetch(window.chatEndpoints.conversations, { headers: { Accept: "application/json" } });
+    const result = await response.json();
+    if (!response.ok || !result.success) throw new Error(result.error || "Conversations could not be loaded.");
+    chats = result.conversations || [];
+    if (!chats.length) chats = [await createChat()];
+    activeChatId = chats[0].id;
+    await loadChat(activeChatId);
+    renderHistory();
+    renderActiveChat();
   }
 
   function initialiseNumpy() {
