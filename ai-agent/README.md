@@ -37,6 +37,14 @@ The guest chat gateway exposes `GET/POST /chat/conversations`,
 `GET/DELETE /chat/conversations/{id}`, and
 `POST /chat/conversations/{id}/messages`.
 
+Run the Python service from the `python-api` directory with
+`python -m uvicorn app.main:app --reload --port 8000`. Copy
+`python-api/.env.example` to `python-api/.env` and set `GEMINI_API_KEY`
+without committing the value. The CodeIgniter gateway defaults to
+`http://127.0.0.1:8000`; change that URL in the Connection settings only
+when the Python service is running elsewhere. The gateway health endpoint is
+`GET /python/health`.
+
 Authentication endpoints expose `GET /auth/current`, `POST /auth/register`,
 `POST /auth/login`, and `POST /auth/logout`. Authentication uses the
 CodeIgniter session cookie. Passwords are stored as one-way password hashes;

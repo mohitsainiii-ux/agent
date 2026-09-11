@@ -9,5 +9,5 @@ def health() -> dict:
         "success": True,
         "status": "ok",
         "service": "python-api",
-        "modules": ["numpy"],
+        "modules": ["chat", "numpy"],
     }

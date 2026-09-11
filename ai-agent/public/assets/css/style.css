@@ -343,17 +343,6 @@ html.dark .btn-close {
   }
 }
 
-.numpy-workspace {
-  max-width: 720px;
-  margin-top: 2rem;
-  padding: 1.5rem;
-  background: var(--bg-header);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  text-align: left;
-}
-
 .eyebrow {
   color: #2563eb;
   font-size: 0.72rem;
@@ -377,16 +366,6 @@ html.dark .btn-close {
   box-shadow: 0 0 0 4px rgba(22, 163, 74, 0.15);
 }
 
-.numpy-input {
-  resize: vertical;
-  min-height: 86px;
-  background: var(--bg-main);
-  color: var(--text-primary);
-  border-color: var(--border);
-}
-
-.numpy-workspace .form-control,
-.numpy-workspace .form-select,
 .modal-content .form-control,
 .modal-content .form-select {
   background-color: var(--bg-main);
@@ -394,27 +373,6 @@ html.dark .btn-close {
   border-color: var(--border);
 }
 
-.numpy-result {
-  padding: 0.9rem 1rem;
-  border-left: 4px solid #2563eb;
-  background: rgba(37, 99, 235, 0.08);
-  color: var(--text-primary);
-  white-space: pre-wrap;
-  word-break: break-word;
-}
-
-.settings-heading {
-  color: var(--text-primary);
-  font-weight: 700;
-}
-
-.settings-checks {
-  display: grid;
-  gap: 0.65rem;
-}
-
-html.dark .numpy-workspace .form-control,
-html.dark .numpy-workspace .form-select,
 html.dark .modal-content .form-control,
 html.dark .modal-content .form-select {
   background-color: #111827;

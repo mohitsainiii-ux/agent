@@ -14,15 +14,7 @@
   const themeToggleMobile = document.getElementById("themeToggleMobile");
   const attachBtn = document.getElementById("attachBtn");
   const fileInput = document.getElementById("fileInput");
-  const numpyForm = document.getElementById("numpyForm");
-  const numpyInput = document.getElementById("numpyInput");
-  const numpyOperation = document.getElementById("numpyOperation");
-  const numpySubmit = document.getElementById("numpySubmit");
-  const numpyError = document.getElementById("numpyError");
-  const numpyResult = document.getElementById("numpyResult");
-  const numpyFilterFields = document.querySelector(".numpy-filter-fields");
-  const numpyReshapeFields = document.querySelector(".numpy-reshape-fields");
-  const numpyStatusDot = document.getElementById("numpyStatusDot");
+  const apiStatusDot = document.getElementById("apiStatusDot");
   const onlineStatus = document.getElementById("onlineStatus");
   const settingsForm = document.getElementById("settingsForm");
   const authModal = document.getElementById("authModal");
@@ -45,7 +37,7 @@
   let authMode = "login";
 
   applyTheme(localStorage.getItem(THEME_KEY) || "light");
-  initialiseNumpy();
+  initialiseConnection();
   initialiseChat();
 
   document.getElementById("newChatBtn")?.addEventListener("click", startNewChat);
@@ -58,8 +50,6 @@
   searchHistory?.addEventListener("input", () => renderHistory(searchHistory.value));
   searchHistoryMobile?.addEventListener("input", () => renderHistory(searchHistoryMobile.value));
 
-  numpyOperation?.addEventListener("change", updateNumpyFields);
-  numpyForm?.addEventListener("submit", processNumpy);
   settingsForm?.addEventListener("submit", saveSettings);
   authForm?.addEventListener("submit", submitAuth);
   authModeToggle?.addEventListener("click", toggleAuthMode);
@@ -204,24 +194,13 @@
     renderActiveChat();
   }
 
-  function initialiseNumpy() {
-    const settings = window.numpySettings || {};
+  function initialiseConnection() {
+    const settings = window.pythonSettings || {};
     const python = settings.python || {};
-    const numpy = settings.numpy || {};
 
     setValue("apiUrl", python.api_url || "http://127.0.0.1:8000");
     setValue("apiTimeout", python.timeout || 30);
     setChecked("pythonEnabled", python.enabled !== false);
-    setValue("defaultOperation", numpy.default_operation || "sum");
-    setValue("decimalPrecision", numpy.decimal_precision ?? 2);
-    setValue("maxInputValues", numpy.max_input_values || 10000);
-    setValue("defaultRows", numpy.reshape_rows || 1);
-    setValue("defaultCols", numpy.reshape_cols || 5);
-    setChecked("allowNegative", numpy.allow_negative !== false);
-    setChecked("allowDecimal", numpy.allow_decimal !== false);
-    setChecked("autoArrayConversion", numpy.auto_array_conversion !== false);
-    numpyOperation.value = numpy.default_operation || "sum";
-    updateNumpyFields();
     checkHealth(false);
   }
 
@@ -235,68 +214,20 @@
     if (element) element.checked = Boolean(value);
   }
 
-  function updateNumpyFields() {
-    const operation = numpyOperation?.value;
-    numpyFilterFields?.classList.toggle("d-none", operation !== "filter");
-    numpyReshapeFields?.classList.toggle("d-none", operation !== "reshape");
-  }
-
-  async function processNumpy(event) {
-    event.preventDefault();
-    clearNumpyMessage();
-    numpySubmit.disabled = true;
-    numpySubmit.innerHTML = '<span class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span> Processing';
-
-    const payload = {
-      operation: numpyOperation.value,
-      input: numpyInput.value,
-      filter_value: document.getElementById("filterValue")?.value || null,
-      reshape_rows: document.getElementById("reshapeRows")?.value || undefined,
-      reshape_cols: document.getElementById("reshapeCols")?.value || undefined,
-    };
-
-    try {
-      const response = await fetch(window.numpyEndpoints.process, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Accept: "application/json" },
-        body: JSON.stringify(payload),
-      });
-      const result = await response.json();
-      if (!response.ok || !result.success) throw new Error(result.error || "The calculation could not be completed.");
-      numpyResult.textContent = result.display || formatNumpyResult(result.result);
-      numpyResult.classList.remove("d-none");
-    } catch (error) {
-      numpyError.textContent = error.message || "Python API is unavailable. Check Settings.";
-      numpyError.classList.remove("d-none");
-    } finally {
-      numpySubmit.disabled = false;
-      numpySubmit.innerHTML = '<i class="bi bi-calculator me-1"></i> Calculate';
-    }
-  }
-
-  function formatNumpyResult(result) {
-    return typeof result === "object" ? JSON.stringify(result) : String(result);
-  }
-
-  function clearNumpyMessage() {
-    numpyError?.classList.add("d-none");
-    numpyResult?.classList.add("d-none");
-  }
-
   async function checkHealth(showMessage) {
     if (showMessage) setSettingsStatus("Checking...", false);
     try {
-      const response = await fetch(window.numpyEndpoints.health, { headers: { Accept: "application/json" } });
+      const response = await fetch(window.pythonEndpoints.health, { headers: { Accept: "application/json" } });
       const result = await response.json();
       const connected = response.ok && result.connected === true;
       onlineStatus.textContent = connected ? "Python API connected" : "Python API disconnected";
       onlineStatus.className = `badge ${connected ? "bg-success-subtle text-success border-success-subtle" : "bg-danger-subtle text-danger border-danger-subtle"} border small`;
-      numpyStatusDot?.classList.toggle("connected", connected);
+      apiStatusDot?.classList.toggle("connected", connected);
       if (showMessage) setSettingsStatus(connected ? "Connected" : "Disconnected", connected);
     } catch {
       onlineStatus.textContent = "Python API disconnected";
       onlineStatus.className = "badge bg-danger-subtle text-danger border-danger-subtle border small";
-      numpyStatusDot?.classList.remove("connected");
+      apiStatusDot?.classList.remove("connected");
       if (showMessage) setSettingsStatus("Disconnected", false);
     }
   }
@@ -307,16 +238,13 @@
     errorBox.classList.add("d-none");
     const payload = {
       python: { api_url: document.getElementById("apiUrl").value, timeout: document.getElementById("apiTimeout").value, enabled: document.getElementById("pythonEnabled").checked },
-      numpy: { default_operation: document.getElementById("defaultOperation").value, decimal_precision: document.getElementById("decimalPrecision").value, max_input_values: document.getElementById("maxInputValues").value, reshape_rows: document.getElementById("defaultRows").value, reshape_cols: document.getElementById("defaultCols").value, allow_negative: document.getElementById("allowNegative").checked, allow_decimal: document.getElementById("allowDecimal").checked, auto_array_conversion: document.getElementById("autoArrayConversion").checked },
     };
 
     try {
-      const response = await fetch(window.numpyEndpoints.settings, { method: "POST", headers: { "Content-Type": "application/json", Accept: "application/json" }, body: JSON.stringify(payload) });
+      const response = await fetch(window.pythonEndpoints.settings, { method: "POST", headers: { "Content-Type": "application/json", Accept: "application/json" }, body: JSON.stringify(payload) });
       const result = await response.json();
       if (!response.ok || !result.success) throw new Error(result.error || "Settings could not be saved.");
-      window.numpySettings = result.settings;
-      numpyOperation.value = payload.numpy.default_operation;
-      updateNumpyFields();
+      window.pythonSettings = result.settings;
       setSettingsStatus("Saved", true);
       checkHealth(false);
     } catch (error) {
