@@ -54,56 +54,27 @@
             <i class="bi bi-list fs-4"></i>
           </button>
           <div>
-            <h6 class="mb-0 fw-semibold" id="chatTitle">NumPy workspace</h6>
+            <h6 class="mb-0 fw-semibold" id="chatTitle">New conversation</h6>
             <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle small" id="onlineStatus">Checking Python API...</span>
           </div>
         </div>
       </header>
 
       <div class="messages-container flex-grow-1 overflow-auto p-3 p-md-4" id="messagesContainer">
-        <div id="emptyState" class="empty-state numpy-workspace">
+        <div id="emptyState" class="empty-state">
           <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
             <div>
-              <span class="eyebrow">Python + NumPy</span>
-              <h4 class="fw-semibold mb-1">Numerical playground</h4>
-              <p class="text-muted mb-0">Send numeric values through the CodeIgniter gateway.</p>
+              <span class="eyebrow">Gemini assistant</span>
+              <h4 class="fw-semibold mb-1">How can I help?</h4>
+              <p class="text-muted mb-0">Ask a question or describe a task to start a conversation.</p>
             </div>
-            <span class="api-status-dot" id="numpyStatusDot" aria-hidden="true"></span>
+            <span class="api-status-dot" id="apiStatusDot" aria-hidden="true"></span>
           </div>
-          <form id="numpyForm" novalidate>
-            <label class="form-label" for="numpyInput">Values</label>
-            <textarea class="form-control numpy-input" id="numpyInput" rows="3" placeholder="10, 20, 30, 40, 50" required></textarea>
-            <div class="row g-3 mt-1">
-              <div class="col-sm-6">
-                <label class="form-label" for="numpyOperation">Operation</label>
-                <select class="form-select" id="numpyOperation">
-                  <option value="sum">Sum</option>
-                  <option value="mean">Mean</option>
-                  <option value="min">Minimum</option>
-                  <option value="max">Maximum</option>
-                  <option value="std">Standard deviation</option>
-                  <option value="sort">Sort</option>
-                  <option value="filter">Filter</option>
-                  <option value="reshape">Reshape</option>
-                  <option value="info">Array information</option>
-                  <option value="create">Create array</option>
-                  <option value="abs">Absolute values</option>
-                  <option value="square">Square values</option>
-                </select>
-              </div>
-              <div class="col-sm-6 numpy-filter-fields d-none">
-                <label class="form-label" for="filterValue">Filter value</label>
-                <input class="form-control" id="filterValue" type="number" step="any" placeholder="30" />
-              </div>
-            </div>
-            <div class="row g-3 mt-1 numpy-reshape-fields d-none">
-              <div class="col-6"><label class="form-label" for="reshapeRows">Rows</label><input class="form-control" id="reshapeRows" type="number" min="1" /></div>
-              <div class="col-6"><label class="form-label" for="reshapeCols">Columns</label><input class="form-control" id="reshapeCols" type="number" min="1" /></div>
-            </div>
-            <button class="btn btn-primary mt-3" id="numpySubmit" type="submit"><i class="bi bi-calculator me-1"></i> Calculate</button>
-            <div class="alert alert-danger d-none mt-3 mb-0" id="numpyError" role="alert"></div>
-            <div class="numpy-result d-none mt-3" id="numpyResult" aria-live="polite"></div>
-          </form>
+          <div class="d-flex flex-wrap gap-2 suggestion-list">
+            <button class="btn btn-outline-secondary suggestion-chip" type="button" data-prompt="Explain this concept simply">Explain a concept</button>
+            <button class="btn btn-outline-secondary suggestion-chip" type="button" data-prompt="Help me plan a project">Plan a project</button>
+            <button class="btn btn-outline-secondary suggestion-chip" type="button" data-prompt="Review this idea and suggest improvements">Review an idea</button>
+          </div>
         </div>
         <div id="messageArea"></div>
         <div id="typingIndicator" class="d-none mb-3">
@@ -204,7 +175,7 @@
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title">Python + NumPy Settings</h5>
+          <h5 class="modal-title">Connection settings</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
@@ -217,15 +188,6 @@
             </div>
             <button class="btn btn-outline-primary btn-sm mt-2" id="healthCheckBtn" type="button"><i class="bi bi-heart-pulse me-1"></i> Test connection</button>
             <span class="small ms-2" id="settingsStatus"></span>
-            <hr />
-            <h6 class="settings-heading">NumPy</h6>
-            <div class="row g-3">
-              <div class="col-sm-6"><label class="form-label" for="defaultOperation">Default operation</label><select class="form-select" id="defaultOperation"><option value="sum">Sum</option><option value="mean">Mean</option><option value="min">Minimum</option><option value="max">Maximum</option><option value="std">Standard deviation</option><option value="sort">Sort</option><option value="filter">Filter</option><option value="reshape">Reshape</option><option value="info">Array information</option><option value="create">Create array</option><option value="abs">Absolute values</option><option value="square">Square values</option></select></div>
-              <div class="col-sm-6"><label class="form-label" for="decimalPrecision">Decimal precision</label><input class="form-control" id="decimalPrecision" type="number" min="0" max="10" /></div>
-              <div class="col-sm-6"><label class="form-label" for="maxInputValues">Maximum input values</label><input class="form-control" id="maxInputValues" type="number" min="1" max="100000" /></div>
-              <div class="col-sm-6"><label class="form-label" for="reshapeDefaults">Default reshape</label><div class="input-group"><input class="form-control" id="defaultRows" type="number" min="1" aria-label="Default rows" /><span class="input-group-text">x</span><input class="form-control" id="defaultCols" type="number" min="1" aria-label="Default columns" /></div></div>
-            </div>
-            <div class="settings-checks mt-3"><label class="form-check"><input class="form-check-input" id="allowNegative" type="checkbox" /> <span class="form-check-label">Allow negative numbers</span></label><label class="form-check"><input class="form-check-input" id="allowDecimal" type="checkbox" /> <span class="form-check-label">Allow decimal numbers</span></label><label class="form-check"><input class="form-check-input" id="autoArrayConversion" type="checkbox" /> <span class="form-check-label">Automatic array conversion</span></label></div>
             <div class="alert alert-danger d-none mt-3 mb-0" id="settingsError" role="alert"></div>
             <div class="modal-footer px-0 pb-0 mt-4"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button><button type="submit" class="btn btn-primary" id="saveSettingsBtn">Save settings</button></div>
           </form>
@@ -235,8 +197,8 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-  <script>window.numpySettings = <?= json_encode($settings ?? [], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;</script>
-  <script>window.numpyEndpoints = { process: "<?= site_url('numpy/process') ?>", health: "<?= site_url('numpy/health') ?>", settings: "<?= site_url('settings') ?>", settingsTest: "<?= site_url('settings/test') ?>" };</script>
+  <script>window.pythonSettings = <?= json_encode($settings ?? [], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;</script>
+  <script>window.pythonEndpoints = { health: "<?= site_url('python/health') ?>", settings: "<?= site_url('settings') ?>", settingsTest: "<?= site_url('settings/test') ?>" };</script>
   <script>window.chatEndpoints = { conversations: "<?= site_url('chat/conversations') ?>" };</script>
   <script>window.authEndpoints = { current: "<?= site_url('auth/current') ?>", register: "<?= site_url('auth/register') ?>", login: "<?= site_url('auth/login') ?>", logout: "<?= site_url('auth/logout') ?>" };</script>
   <script src="assets/js/script.js"></script>

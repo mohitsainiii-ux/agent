@@ -33,6 +33,7 @@ $routes->get('chat/conversations/(:num)', 'Chat::loadConversation/$1');
 $routes->delete('chat/conversations/(:num)', 'Chat::deleteConversation/$1');
 $routes->post('chat/conversations/(:num)/messages', 'Chat::sendMessage/$1');
 $routes->get('numpy/health', 'Numpy::health');
+$routes->get('python/health', 'Numpy::health');
 $routes->post('numpy/process', 'Numpy::process');
 
 $routes->get('settings', 'Settings::index');
