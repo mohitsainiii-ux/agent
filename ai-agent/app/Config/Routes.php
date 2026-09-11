@@ -21,6 +21,11 @@ $routes->set404Override();
 // route since we don't have to scan directories.
 $routes->get('/', 'Chat::index');
 
+$routes->get('auth/current', 'Auth::current');
+$routes->post('auth/register', 'Auth::register');
+$routes->post('auth/login', 'Auth::login');
+$routes->post('auth/logout', 'Auth::logout');
+
 $routes->post('chat', 'Chat::send');
 $routes->get('chat/conversations', 'Chat::conversations');
 $routes->post('chat/conversations', 'Chat::createConversation');

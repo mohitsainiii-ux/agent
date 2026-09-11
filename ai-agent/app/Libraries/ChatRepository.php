@@ -2,6 +2,7 @@
 
 namespace App\Libraries;
 
+use CodeIgniter\Database\BaseBuilder;
 use CodeIgniter\Database\BaseConnection;
 use Config\Database;
 use RuntimeException;
@@ -9,8 +10,8 @@ use RuntimeException;
 /**
  * Persistence for unauthenticated (guest) conversations.
  *
- * Guest conversations intentionally use a NULL user_id. Authentication is
- * outside this application, so the gateway only exposes this guest scope.
+ * Anonymous conversations use a NULL user_id; authenticated conversations are
+ * scoped to the user id stored in the CodeIgniter session.
  */
 class ChatRepository
 {
@@ -23,13 +24,13 @@ class ChatRepository
 
     public function listConversations(): array
     {
-        return $this->db->table('conversations')
+        $query = $this->db->table('conversations')
             ->select('id, title, created_at, updated_at')
-            ->where('user_id IS NULL', null, false)
             ->orderBy('updated_at', 'DESC')
-            ->orderBy('id', 'DESC')
-            ->get()
-            ->getResultArray();
+            ->orderBy('id', 'DESC');
+        $this->applyScope($query);
+
+        return $query->get()->getResultArray();
     }
 
     public function createConversation(string $title = 'New conversation'): array
@@ -38,7 +39,7 @@ class ChatRepository
         $title = mb_substr($title, 0, 255);
 
         $this->db->table('conversations')->insert([
-            'user_id' => null,
+            'user_id' => $this->currentUserId(),
             'title'   => $title,
         ]);
 
@@ -52,12 +53,11 @@ class ChatRepository
 
     public function findConversation(int $id, bool $withMessages = true): ?array
     {
-        $conversation = $this->db->table('conversations')
+        $query = $this->db->table('conversations')
             ->select('id, title, created_at, updated_at')
-            ->where('id', $id)
-            ->where('user_id IS NULL', null, false)
-            ->get()
-            ->getRowArray();
+            ->where('id', $id);
+        $this->applyScope($query);
+        $conversation = $query->get()->getRowArray();
 
         if (empty($conversation)) {
             return null;
@@ -133,9 +133,27 @@ class ChatRepository
             return false;
         }
 
-        return (bool) $this->db->table('conversations')
-            ->where('id', $id)
-            ->where('user_id IS NULL', null, false)
-            ->delete();
+        $query = $this->db->table('conversations')->where('id', $id);
+        $this->applyScope($query);
+
+        return (bool) $query->delete();
+    }
+
+    private function currentUserId(): ?int
+    {
+        $userId = service('session')->get('user_id');
+
+        return is_numeric($userId) && (int) $userId > 0 ? (int) $userId : null;
+    }
+
+    private function applyScope(BaseBuilder $query): void
+    {
+        $userId = $this->currentUserId();
+        if ($userId === null) {
+            $query->where('user_id IS NULL', null, false);
+            return;
+        }
+
+        $query->where('user_id', $userId);
     }
 }
