@@ -6,7 +6,7 @@ use CodeIgniter\Config\BaseConfig;
 
 class Python extends BaseConfig
 {
-    public string $apiURL = 'http://127.0.0.1:8000';
+    public string $apiURL = 'http://127.0.0.1:8001';
     public int $timeout = 30;
     public bool $enabled = true;
 }

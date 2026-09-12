@@ -198,7 +198,7 @@
     const settings = window.pythonSettings || {};
     const python = settings.python || {};
 
-    setValue("apiUrl", python.api_url || "http://127.0.0.1:8000");
+    setValue("apiUrl", python.api_url || "http://127.0.0.1:8001");
     setValue("apiTimeout", python.timeout || 30);
     setChecked("pythonEnabled", python.enabled !== false);
     checkHealth(false);
@@ -283,7 +283,7 @@
   }
 
   function getActiveChat() {
-    return chats.find((chat) => chat.id === activeChatId);
+    return chats.find((chat) => String(chat.id) === String(activeChatId));
   }
 
   async function startNewChat() {
